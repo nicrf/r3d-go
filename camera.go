@@ -36,19 +36,24 @@ func (rc *RCamera) LookAt(target, up Vector3) {
 	C.R3D_CameraLookAt(&rc.c, target.c(), up.c())
 }
 
-// View describes a render pass: a camera and a viewport on the backbuffer.
+// View describes a render pass: a camera, a viewport, and an optional offscreen
+// target. If Target is nil the backbuffer is used; otherwise R3D renders into
+// the given RenderTexture (e.g. an editor viewport shown in a Dear ImGui window).
 type View struct {
 	Camera   RCamera
 	Viewport Rectangle
+	Target   *RenderTexture
 }
 
-// BeginPro starts an R3D render pass into the view's viewport (split-screen,
-// minimaps, etc.). Pair with End.
+// BeginPro starts an R3D render pass for the view (split-screen, minimaps,
+// render-to-texture). Pair with End.
 func BeginPro(v View) {
 	cv := C.R3D_View{
 		camera:   v.Camera.c,
-		target:   C.RenderTexture{}, // zero => backbuffer
 		viewport: v.Viewport.c(),
+	}
+	if v.Target != nil {
+		cv.target = v.Target.c
 	}
 	C.R3D_BeginPro(cv)
 }

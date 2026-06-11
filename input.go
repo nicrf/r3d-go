@@ -49,6 +49,27 @@ func GetTime() float64 { return float64(C.GetTime()) }
 // GetMouseWheelMove returns the mouse wheel delta this frame.
 func GetMouseWheelMove() float32 { return float32(C.GetMouseWheelMove()) }
 
+// Mouse buttons (raylib MouseButton).
+const (
+	MouseButtonLeft   = int(C.MOUSE_BUTTON_LEFT)
+	MouseButtonRight  = int(C.MOUSE_BUTTON_RIGHT)
+	MouseButtonMiddle = int(C.MOUSE_BUTTON_MIDDLE)
+	MouseButtonSide   = int(C.MOUSE_BUTTON_SIDE)
+	MouseButtonExtra  = int(C.MOUSE_BUTTON_EXTRA)
+)
+
+// GetMousePosition returns the cursor position in logical screen pixels.
+func GetMousePosition() (x, y float32) {
+	p := C.GetMousePosition()
+	return float32(p.x), float32(p.y)
+}
+
+// IsMouseButtonDown reports whether a mouse button is currently held.
+func IsMouseButtonDown(button int) bool { return bool(C.IsMouseButtonDown(C.int(button))) }
+
+// IsMouseButtonPressed reports whether a mouse button was pressed this frame.
+func IsMouseButtonPressed(button int) bool { return bool(C.IsMouseButtonPressed(C.int(button))) }
+
 // GetScreenWidth returns the current window width.
 func GetScreenWidth() int { return int(C.GetScreenWidth()) }
 
