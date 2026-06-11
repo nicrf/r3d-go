@@ -1,0 +1,15 @@
+# built binaries
+/r3ddemo
+/r3ddiag
+
+# headless test screenshots at repo root (the committed sample lives in screenshots/)
+/showcase.png
+/split.png
+/proc.png
+/ssr.png
+/normal.png
+/diag*.png
+
+# macOS / stray
+.DS_Store
+*.log
