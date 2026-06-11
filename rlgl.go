@@ -85,6 +85,18 @@ func RlUpdateTexture(id uint32, offsetX, offsetY, width, height, format int, dat
 // RlUnloadTexture frees a GL texture by id.
 func RlUnloadTexture(id uint32) { C.rlUnloadTexture(C.uint(id)) }
 
+// DrawGLTexture draws a raw GL texture id (RGBA8) onto the current framebuffer,
+// scaled. Useful for debugging texture contents.
+func DrawGLTexture(id uint32, srcW, srcH int, x, y, scale float32) {
+	tex := C.Texture2D{
+		id: C.uint(id), width: C.int(srcW), height: C.int(srcH),
+		mipmaps: 1, format: C.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
+	}
+	src := C.Rectangle{x: 0, y: 0, width: C.float(srcW), height: C.float(srcH)}
+	dst := C.Rectangle{x: C.float(x), y: C.float(y), width: C.float(srcW) * C.float(scale), height: C.float(srcH) * C.float(scale)}
+	C.DrawTexturePro(tex, src, dst, C.Vector2{}, 0, C.Color{r: 255, g: 255, b: 255, a: 255})
+}
+
 // BeginBlendMode / EndBlendMode set the active blend mode (raylib).
 func BeginBlendMode(mode int) { C.BeginBlendMode(C.int(mode)) }
 func EndBlendMode()           { C.EndBlendMode() }
