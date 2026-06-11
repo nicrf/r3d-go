@@ -24,6 +24,7 @@ const (
 	KeyI = int(C.KEY_I)
 	KeyK = int(C.KEY_K)
 	KeyO = int(C.KEY_O)
+	KeyP = int(C.KEY_P)
 	KeyR = int(C.KEY_R)
 	KeyS = int(C.KEY_S)
 	KeyT = int(C.KEY_T)

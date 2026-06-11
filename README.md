@@ -54,8 +54,19 @@ make demo       # build + sign -> ./r3ddemo
 ```
 
 Showcase controls: **B** bloom · **O** SSAO · **I** SSGI · **R** SSR · **G** fog ·
-**F** depth-of-field · **T** tonemap · **K** procedural sky · **V** split-screen ·
-**Space** pause lights · **H** toggle help · **ESC** quit.
+**F** depth-of-field · **T** tonemap · **K** procedural sky · **P** parallax wall ·
+**V** split-screen · **Space** pause lights · **H** toggle help · **ESC** quit.
+
+### Parallax mapping & UV mapping
+
+UV mapping is native (per-vertex texcoords + material `uvScale`/`uvOffset`).
+R3D has no built-in height/displacement map, but its **custom surface shaders**
+expose everything needed for parallax-occlusion mapping in the fragment stage
+(`TEXCOORD`, world `POSITION`, `TANGENT`/`BITANGENT`/`NORMAL`, custom samplers
+and uniforms). The showcase ships a POM brick wall — `assets/shaders/parallax.glsl`
+driven from Go via `LoadSurfaceShader` / `SetSampler` / `SetUniform*`:
+
+![parallax off vs on](screenshots/parallax.png)
 
 > **MSAA + multi-view caveat.** Do not set `FlagMSAA4xHint` if you use
 > `BeginPro` sub-viewports (split-screen): a multisampled backbuffer makes R3D's
@@ -120,6 +131,8 @@ API lives in `include/r3d/`.
 - **Instancing**: `LoadInstanceBuffer`, `MapPositions/Rotations/Scales/Colors`, `UploadPositions`, `DrawMeshInstanced`
 - **Decals**: `NewDecal`, maps, `DrawDecal(Ex)`
 - **Transparency / stencil**: material transparency/blend/cull modes, `SetStencil`, `SetDepthMode` (outline / x-ray)
+- **UV mapping**: `Material.SetUVScale` / `SetUVOffset` (tiling/panning); meshes carry texcoords
+- **Custom surface shaders**: `LoadSurfaceShader`, `SetUniformFloat/Int/Vec3`, `SetSampler`, `Material.SetShader` — e.g. parallax-occlusion mapping (`assets/shaders/parallax.glsl`)
 - **Multi-view**: `CameraFromRL`, `BeginPro` with viewports (split-screen, minimaps)
 - **Post-processing**: `SetBloom`, `SetSSAO`, `SetSSGI`, `SetSSIL`, `SetSSR`, `SetFog`, `SetDoF`, `SetTonemap`, `SetColorAdjustment`
 - **Drawing**: `DrawMesh(Ex)`, environment background/ambient color

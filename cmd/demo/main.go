@@ -43,6 +43,7 @@ func main() {
 	}
 	r3d.Init(r3d.GetRenderWidth(), r3d.GetRenderHeight())
 	r3d.SetTextureFilter(r3d.FilterAnisotropic4x)
+	r3d.SetTextureWrap(r3d.WrapRepeat) // tiling for the parallax brick wall
 
 	// --- Camera --------------------------------------------------------------
 	cam := r3d.Camera3D{
@@ -163,6 +164,19 @@ func main() {
 	decal.SetNormalThreshold(45)
 	decal.SetFadeWidth(20)
 
+	// --- Parallax-occlusion-mapped brick wall (custom surface shader) -------
+	wallMesh := r3d.GenMeshQuad(7, 4, 1, 1, r3d.Vector3{X: 0, Y: 0, Z: 1}) // vertical wall facing +Z
+	brickMat := r3d.GetDefaultMaterial()
+	brickMat.SetAlbedoMap(r3d.LoadAlbedoMap(assets+"images/brick_albedo.png", r3d.White))
+	brickMat.SetNormalMap(r3d.LoadNormalMap(assets+"images/brick_normal.png", 1.0))
+	brickMat.SetRoughness(0.85)
+	brickHeight := r3d.LoadTexture(assets + "images/brick_height.png")
+	parallax := r3d.LoadSurfaceShader(assets + "shaders/parallax.glsl")
+	brickMat.SetShader(parallax)
+	parallax.SetSampler("u_height", brickHeight)
+	parallax.SetUniformFloat("u_depth_scale", 0.08)
+	parallax.SetUniformFloat("u_tile", 2.0)
+
 	// --- Particle system (additive emissive billboards) ---------------------
 	const maxParticles = 2048
 	particles := make([]particle, 0, maxParticles)
@@ -254,6 +268,10 @@ func main() {
 		r3d.DrawDecalEx(decal, r3d.Vector3{X: -2, Y: 0.05, Z: -2},
 			r3d.QuaternionFromAxisAngle(r3d.Vector3{X: 0, Y: 1, Z: 0}, 0.6), r3d.Vector3{X: 2.5, Y: 2.5, Z: 2.5})
 
+		// parallax-occlusion-mapped brick wall (vertical, at the back)
+		r3d.DrawMeshEx(wallMesh, brickMat, r3d.Vector3{X: 0, Y: 2, Z: -9},
+			r3d.QuaternionIdentity(), r3d.Vector3{X: 1, Y: 1, Z: 1})
+
 		// transparent glass cubes (drawn last; alpha-blended)
 		for i, gc := range glassColors {
 			m := r3d.GetDefaultMaterial()
@@ -278,6 +296,8 @@ func main() {
 	ssgiOn := false
 	procOn := false
 	split := false
+	parallaxOn := os.Getenv("R3D_DEMO_NOPARALLAX") == ""
+	parallax.SetUniformInt("u_enable", boolToInt(parallaxOn))
 	tonemap := r3d.TonemapACES
 	paused := false
 	showHelp := true
@@ -351,6 +371,10 @@ func main() {
 		if r3d.IsKeyPressed(r3d.KeyV) {
 			split = !split
 		}
+		if r3d.IsKeyPressed(r3d.KeyP) {
+			parallaxOn = !parallaxOn
+			parallax.SetUniformInt("u_enable", boolToInt(parallaxOn))
+		}
 		if r3d.IsKeyPressed(r3d.KeySpace) {
 			paused = !paused
 		}
@@ -363,7 +387,13 @@ func main() {
 		}
 
 		// --- animate scene ---------------------------------------------------
-		r3d.UpdateCamera(&cam, r3d.CameraOrbital)
+		if os.Getenv("R3D_DEMO_WALLCAM") != "" {
+			// fixed grazing view of the parallax wall (for screenshots)
+			cam.Position = r3d.Vector3{X: 3.6, Y: 2.3, Z: -5.2}
+			cam.Target = r3d.Vector3{X: -1.5, Y: 1.9, Z: -9}
+		} else {
+			r3d.UpdateCamera(&cam, r3d.CameraOrbital)
+		}
 		player.Update(dt)
 		r3d.SetBackgroundRotation(r3d.QuaternionFromAxisAngle(r3d.Vector3{X: 0, Y: 1, Z: 0}, t*0.02))
 
@@ -399,6 +429,9 @@ func main() {
 		spriteMat.SetUVScale(1.0/spriteFrames, 1)
 		spriteMat.SetUVOffset(float32(spriteFrame)/spriteFrames, 0)
 
+		// feed the parallax shader the camera position (tangent-space view dir)
+		parallax.SetUniformVec3("u_view_pos", cam.Position)
+
 		// --- render ----------------------------------------------------------
 		r3d.BeginDrawing()
 		if split {
@@ -425,7 +458,7 @@ func main() {
 		if uiScale < 1 {
 			uiScale = 1
 		}
-		drawHUD(uiScale, hud{showHelp, bloomMode, ssaoOn, fogMode, dofOn, ssrOn, ssgiOn, procOn, split, tonemap, len(particles)})
+		drawHUD(uiScale, hud{showHelp, bloomMode, ssaoOn, fogMode, dofOn, ssrOn, ssgiOn, procOn, split, parallaxOn, tonemap, len(particles)})
 
 		r3d.EndDrawing()
 
@@ -440,6 +473,8 @@ func main() {
 	probe.Destroy()
 	partBuf.Unload()
 	ring.Unload()
+	parallax.Unload()
+	brickHeight.Unload()
 	player.Unload()
 	anims.Unload()
 	character.Unload(true)
@@ -462,12 +497,13 @@ type hud struct {
 	ssgi     bool
 	proc     bool
 	split    bool
+	parallax bool
 	tonemap  r3d.TonemapMode
 	parts    int
 }
 
 func drawHUD(s int, h hud) {
-	r3d.DrawRectangle(0, 0, 380*s, 280*s, r3d.Color{R: 0, G: 0, B: 0, A: 150})
+	r3d.DrawRectangle(0, 0, 380*s, 300*s, r3d.Color{R: 0, G: 0, B: 0, A: 150})
 	r3d.DrawText("R3D Go showcase", 12*s, 10*s, 22*s, r3d.RayWhite)
 	r3d.DrawFPS(320*s, 12*s)
 	y := 44 * s
@@ -487,6 +523,7 @@ func drawHUD(s int, h hud) {
 	line(fmt.Sprintf("[F] Depth of Field: %v", h.dof), h.dof)
 	line(fmt.Sprintf("[T] Tonemap: %s", tonemapName(h.tonemap)), true)
 	line(fmt.Sprintf("[K] Procedural sky: %v", h.proc), h.proc)
+	line(fmt.Sprintf("[P] Parallax wall: %v", h.parallax), h.parallax)
 	line(fmt.Sprintf("[V] Split-screen: %v", h.split), h.split)
 	r3d.DrawText(fmt.Sprintf("particles: %d", h.parts), 12*s, y, 18*s, r3d.RayWhite)
 
@@ -504,6 +541,13 @@ func fogName(f r3d.FogMode) string {
 }
 func tonemapName(t r3d.TonemapMode) string {
 	return []string{"linear", "reinhard", "filmic", "aces", "agx"}[int(t)]
+}
+
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }
 
 func cosf(x float32) float32 { return float32(math.Cos(float64(x))) }
