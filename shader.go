@@ -22,6 +22,18 @@ func LoadTexture(fileName string) Texture {
 // Unload frees the texture.
 func (t Texture) Unload() { C.UnloadTexture(t.c) }
 
+// ID returns the OpenGL texture id (e.g. to use as an ImGui image handle).
+func (t Texture) ID() uint32 { return uint32(t.c.id) }
+
+// Width returns the texture width in pixels.
+func (t Texture) Width() int { return int(t.c.width) }
+
+// Height returns the texture height in pixels.
+func (t Texture) Height() int { return int(t.c.height) }
+
+// IsValid reports whether the texture handle is a non-zero GL id.
+func (t Texture) IsValid() bool { return t.c.id != 0 }
+
 // SurfaceShader wraps an R3D_SurfaceShader (custom material/decal shader).
 type SurfaceShader struct{ c *C.R3D_SurfaceShader }
 
