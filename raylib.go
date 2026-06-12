@@ -64,6 +64,9 @@ func WindowShouldClose() bool { return bool(C.WindowShouldClose()) }
 // IsWindowReady reports whether the window was successfully initialized.
 func IsWindowReady() bool { return bool(C.IsWindowReady()) }
 
+// IsWindowFocused reports whether the window currently has input focus.
+func IsWindowFocused() bool { return bool(C.IsWindowFocused()) }
+
 // SetTargetFPS sets the target frame rate.
 func SetTargetFPS(fps int) { C.SetTargetFPS(C.int(fps)) }
 
