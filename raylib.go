@@ -58,6 +58,13 @@ func InitWindow(width, height int, title string) {
 // CloseWindow closes the window and unloads the OpenGL context.
 func CloseWindow() { C.CloseWindow() }
 
+// SetWindowTitle sets the window title.
+func SetWindowTitle(title string) {
+	ct := C.CString(title)
+	defer C.free(unsafe.Pointer(ct))
+	C.SetWindowTitle(ct)
+}
+
 // WindowShouldClose reports whether a close was requested (ESC / close button).
 func WindowShouldClose() bool { return bool(C.WindowShouldClose()) }
 

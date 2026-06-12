@@ -30,6 +30,12 @@ const (
 	KeyT = int(C.KEY_T)
 	KeyV = int(C.KEY_V)
 
+	KeyY = int(C.KEY_Y)
+	KeyZ = int(C.KEY_Z)
+
+	KeyLeftControl = int(C.KEY_LEFT_CONTROL)
+	KeyLeftSuper   = int(C.KEY_LEFT_SUPER)
+
 	KeyOne   = int(C.KEY_ONE)
 	KeyTwo   = int(C.KEY_TWO)
 	KeyThree = int(C.KEY_THREE)
