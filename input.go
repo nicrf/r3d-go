@@ -55,12 +55,21 @@ const (
 	KeyRightAlt     = int(C.KEY_RIGHT_ALT)
 	KeyRightSuper   = int(C.KEY_RIGHT_SUPER)
 
+	KeyZero  = int(C.KEY_ZERO)
 	KeyOne   = int(C.KEY_ONE)
 	KeyTwo   = int(C.KEY_TWO)
 	KeyThree = int(C.KEY_THREE)
 	KeyFour  = int(C.KEY_FOUR)
 	KeyFive  = int(C.KEY_FIVE)
+	KeySix   = int(C.KEY_SIX)
+	KeySeven = int(C.KEY_SEVEN)
+	KeyEight = int(C.KEY_EIGHT)
+	KeyNine  = int(C.KEY_NINE)
+	KeyPeriod = int(C.KEY_PERIOD)
 )
+
+// DigitKeys maps the ten number keys to their rune, for numeric entry.
+var DigitKeys = [10]int{KeyZero, KeyOne, KeyTwo, KeyThree, KeyFour, KeyFive, KeySix, KeySeven, KeyEight, KeyNine}
 
 // IsKeyPressed reports whether a key was pressed this frame.
 func IsKeyPressed(key int) bool { return bool(C.IsKeyPressed(C.int(key))) }
