@@ -3,15 +3,15 @@
 //
 // The native static libraries (libr3d.a, libraylib.a, libassimp.a) and the
 // public headers are vendored under lib/ and include/ so the package is
-// self-contained: `go build` links them directly. macOS / arm64 only for now
-// (the vendored archives are Mach-O arm64); rebuild the archives for another
-// platform to retarget.
+// self-contained: `go build` links them directly. The C include paths are
+// common to all platforms; the per-OS library search paths and link flags
+// live in the cgo_<goos>.go files. Supported targets: macOS/arm64 and
+// Windows/amd64, each with its own vendored archives under lib/<goos_goarch>/
+// (see cgo_darwin.go / cgo_windows.go).
 package r3d
 
 /*
 #cgo CFLAGS: -I${SRCDIR}/include -I${SRCDIR}/include/r3d
-#cgo LDFLAGS: -L${SRCDIR}/lib -lr3d -lraylib -lassimp -lc++ -lz -lm
-#cgo LDFLAGS: -framework OpenGL -framework Cocoa -framework IOKit -framework CoreFoundation -framework CoreVideo
 
 #include <stdlib.h>
 #include "raylib.h"

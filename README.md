@@ -5,8 +5,11 @@ A self-contained [cgo](https://pkg.go.dev/cmd/cgo) binding for
 [raylib](https://www.raylib.com/) — built from the
 [r3dStarter](https://github.com/jensroth-git/r3dStarter) toolchain.
 
-Target: **macOS / arm64** (Apple Silicon). The native static libraries are
-vendored, so a clone builds with no extra dependencies beyond a C toolchain.
+Targets: **macOS / arm64** (Apple Silicon) and **Windows / amd64** (MinGW-w64).
+The native static libraries are vendored per platform under `lib/<goos>_<goarch>/`,
+so a clone builds with no extra dependencies beyond a C toolchain (Xcode CLT on
+macOS; a MinGW-w64 gcc such as [w64devkit](https://github.com/skeeto/w64devkit)
+on Windows).
 
 ![showcase](screenshots/showcase.png)
 
@@ -35,22 +38,45 @@ r3d/
 ├── input.go             # raylib input, keys, colors, HUD helpers
 ├── math.go              # Vector3 / Quaternion helpers
 ├── raylib.go            # window, drawing, text, screenshot
+├── cgo_darwin.go        # macOS link flags (Apple frameworks)  — //go:build darwin
+├── cgo_windows.go       # Windows link flags (Win32 system libs) — //go:build windows
 ├── cmd/demo/main.go     # the feature showcase
 ├── assets/              # models (glb), HDR panorama, images
-├── include/             # vendored public headers (raylib + r3d)
-└── lib/                 # vendored static archives (Mach-O arm64)
-    ├── libr3d.a         # R3D (shaders + lookup textures embedded at compile time)
-    ├── libraylib.a      # raylib 5.5 (image formats PNG/HDR/JPG enabled — see below)
-    └── libassimp.a      # Assimp (model loading)
+├── include/             # vendored public headers (raylib + r3d), shared by all platforms
+└── lib/                 # vendored static archives, one dir per platform
+    ├── darwin_arm64/    # Mach-O arm64 archives
+    │   ├── libr3d.a     # R3D (shaders + lookup textures embedded at compile time)
+    │   ├── libraylib.a  # raylib 5.5 (image formats PNG/HDR/JPG enabled — see below)
+    │   └── libassimp.a  # Assimp (model loading)
+    └── windows_amd64/   # PE/COFF (MinGW-w64) archives
+        ├── libr3d.a
+        ├── libraylib.a
+        ├── libassimp.a
+        └── libzlibstatic.a  # Assimp's static zlib (compressed model formats)
 ```
+
+The C include paths are common to all platforms (`r3d.go`); the per-OS library
+search paths and link flags live in the `cgo_<goos>.go` files, selected
+automatically by Go build constraints. Adding another platform is: build the
+three archives, drop them in a new `lib/<goos>_<goarch>/`, and add a
+`cgo_<goos>.go` with the matching `#cgo LDFLAGS`.
 
 ## Build & run
 
+**macOS:**
 ```bash
 make run        # build, ad-hoc sign, run the showcase
 # or
 make demo       # build + sign -> ./r3ddemo
 ./r3ddemo       # interactive
+```
+
+**Windows** (with a MinGW-w64 gcc on `PATH`, e.g. w64devkit):
+```bash
+make run        # the Makefile detects Windows; no code signing needed
+# or
+go build -o r3ddemo.exe ./cmd/demo
+./r3ddemo.exe   # interactive
 ```
 
 Showcase controls: **B** bloom · **O** SSAO · **I** SSGI · **R** SSR · **G** fog ·
@@ -101,13 +127,22 @@ driven from Go via `LoadSurfaceShader` / `SetSampler` / `SetUniform*`:
 
 ## Linking
 
-`r3d.go` carries the cgo directives:
+`r3d.go` carries the common cgo include paths; each OS supplies its own link
+flags in a build-constrained file.
 
+`cgo_darwin.go` (macOS / arm64):
 ```go
-#cgo CFLAGS:  -I${SRCDIR}/include -I${SRCDIR}/include/r3d
-#cgo LDFLAGS: -L${SRCDIR}/lib -lr3d -lraylib -lassimp -lc++ -lz -lm
+#cgo LDFLAGS: -L${SRCDIR}/lib/darwin_arm64 -lr3d -lraylib -lassimp -lc++ -lz -lm
 #cgo LDFLAGS: -framework OpenGL -framework Cocoa -framework IOKit \
               -framework CoreFoundation -framework CoreVideo
+```
+
+`cgo_windows.go` (Windows / amd64, MinGW-w64): Apple frameworks become Win32
+system libs, `-lc++` becomes `-lstdc++`, and zlib is the vendored
+`libzlibstatic.a` (must follow `-lassimp`, which references it):
+```go
+#cgo LDFLAGS: -L${SRCDIR}/lib/windows_amd64 -lr3d -lraylib -lassimp -lzlibstatic
+#cgo LDFLAGS: -lopengl32 -lgdi32 -lwinmm -luser32 -lshell32 -lstdc++ -lm
 ```
 
 ## API coverage
@@ -156,3 +191,45 @@ cmake --build build -j
 The non-default flags work around current Apple clang issues (Assimp's `-Werror`
 on new warnings; raylib `rmodels.c` using `assert()` without `<assert.h>`) and
 re-enable raylib's image decoders (PNG/HDR/JPG/QOI) that r3dStarter turns off.
+
+### Windows / amd64 (MinGW-w64)
+
+The helper script **`tools/build-windows-libs.ps1`** automates everything in this
+section — it locates your MinGW/CMake/Python, fetches r3dStarter, builds the
+libraries and drops them into `lib/windows_amd64/`:
+
+```powershell
+pwsh tools/build-windows-libs.ps1            # or: powershell -File tools\build-windows-libs.ps1
+go build -o r3ddemo.exe ./cmd/demo
+```
+
+The manual steps it runs: the Windows archives were built with the same
+[r3dStarter](https://github.com/jensroth-git/r3dStarter)
+CMake project, using the **MinGW Makefiles** generator and the *same* MinGW-w64
+gcc that cgo links with (here w64devkit's gcc 14.2.0 — do not mix MinGW
+distributions, or Assimp's libstdc++ ABI won't match at link). Python 3 is
+required (r3d embeds its shaders at configure time):
+
+```sh
+# PATH must contain ONLY w64devkit\bin, CMake\bin and Python — not git-bash's
+# sh.exe (it breaks the MinGW Makefiles generator) nor any other gcc.
+CC=gcc CXX=g++ cmake -S r3dStarter -B build -G "MinGW Makefiles" \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER=gcc.exe -DCMAKE_CXX_COMPILER=g++.exe \
+  -DCMAKE_MAKE_PROGRAM=mingw32-make.exe \
+  -DSUPPORT_FILEFORMAT_PNG=ON -DSUPPORT_FILEFORMAT_HDR=ON \
+  -DSUPPORT_FILEFORMAT_JPG=ON -DSUPPORT_FILEFORMAT_QOI=ON \
+  -DCMAKE_C_FLAGS="-Wno-error -Wno-implicit-function-declaration -include assert.h" \
+  -DCMAKE_CXX_FLAGS="-Wno-error"
+cmake --build build --target raylib r3d assimp -j
+# copy build/lib/libr3d.a, build/_deps/raylib-build/raylib/libraylib.a,
+# build/_deps/assimp-build/lib/libassimp.a and
+# build/_deps/assimp-build/contrib/zlib/libzlibstatic.a into lib/windows_amd64/
+```
+
+The same `-include assert.h` raylib fix is needed; the template's own
+`src/main.cpp` may fail to compile against newer R3D (`R3D_MapInstances`
+signature drift) — that's only the example exe, the three libraries still build,
+so build the library targets explicitly as above. If CMake reports a
+*"Permission denied"* reading the compiler-id test exe, that's Windows Defender
+locking the fresh binary — just re-run configure.
