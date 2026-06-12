@@ -15,6 +15,9 @@
 /diag*.png
 /win_smoke.png
 
+# Windows native-lib build scratch dir (tools/build-windows-libs.ps1)
+/.build-win/
+
 # macOS / stray
 .DS_Store
 *.log

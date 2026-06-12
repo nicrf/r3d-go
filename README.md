@@ -194,7 +194,17 @@ re-enable raylib's image decoders (PNG/HDR/JPG/QOI) that r3dStarter turns off.
 
 ### Windows / amd64 (MinGW-w64)
 
-The Windows archives were built with the same [r3dStarter](https://github.com/jensroth-git/r3dStarter)
+The helper script **`tools/build-windows-libs.ps1`** automates everything in this
+section — it locates your MinGW/CMake/Python, fetches r3dStarter, builds the
+libraries and drops them into `lib/windows_amd64/`:
+
+```powershell
+pwsh tools/build-windows-libs.ps1            # or: powershell -File tools\build-windows-libs.ps1
+go build -o r3ddemo.exe ./cmd/demo
+```
+
+The manual steps it runs: the Windows archives were built with the same
+[r3dStarter](https://github.com/jensroth-git/r3dStarter)
 CMake project, using the **MinGW Makefiles** generator and the *same* MinGW-w64
 gcc that cgo links with (here w64devkit's gcc 14.2.0 — do not mix MinGW
 distributions, or Assimp's libstdc++ ABI won't match at link). Python 3 is
