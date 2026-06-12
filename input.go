@@ -7,10 +7,18 @@ import "C"
 
 // Keyboard keys (raylib KeyboardKey) used by demos/apps.
 const (
-	KeySpace  = int(C.KEY_SPACE)
-	KeyEnter  = int(C.KEY_ENTER)
-	KeyTab    = int(C.KEY_TAB)
-	KeyEscape = int(C.KEY_ESCAPE)
+	KeySpace     = int(C.KEY_SPACE)
+	KeyEnter     = int(C.KEY_ENTER)
+	KeyKpEnter   = int(C.KEY_KP_ENTER)
+	KeyTab       = int(C.KEY_TAB)
+	KeyEscape    = int(C.KEY_ESCAPE)
+	KeyBackspace = int(C.KEY_BACKSPACE)
+	KeyDelete    = int(C.KEY_DELETE)
+	KeyInsert    = int(C.KEY_INSERT)
+	KeyHome      = int(C.KEY_HOME)
+	KeyEnd       = int(C.KEY_END)
+	KeyPageUp    = int(C.KEY_PAGE_UP)
+	KeyPageDown  = int(C.KEY_PAGE_DOWN)
 	KeyLeft  = int(C.KEY_LEFT)
 	KeyRight = int(C.KEY_RIGHT)
 	KeyUp    = int(C.KEY_UP)
@@ -18,7 +26,9 @@ const (
 
 	KeyA = int(C.KEY_A)
 	KeyB = int(C.KEY_B)
+	KeyC = int(C.KEY_C)
 	KeyD = int(C.KEY_D)
+	KeyE = int(C.KEY_E)
 	KeyF = int(C.KEY_F)
 	KeyG = int(C.KEY_G)
 	KeyH = int(C.KEY_H)
@@ -31,12 +41,19 @@ const (
 	KeyS = int(C.KEY_S)
 	KeyT = int(C.KEY_T)
 	KeyV = int(C.KEY_V)
-
+	KeyW = int(C.KEY_W)
+	KeyX = int(C.KEY_X)
 	KeyY = int(C.KEY_Y)
 	KeyZ = int(C.KEY_Z)
 
-	KeyLeftControl = int(C.KEY_LEFT_CONTROL)
-	KeyLeftSuper   = int(C.KEY_LEFT_SUPER)
+	KeyLeftShift    = int(C.KEY_LEFT_SHIFT)
+	KeyLeftControl  = int(C.KEY_LEFT_CONTROL)
+	KeyLeftAlt      = int(C.KEY_LEFT_ALT)
+	KeyLeftSuper    = int(C.KEY_LEFT_SUPER)
+	KeyRightShift   = int(C.KEY_RIGHT_SHIFT)
+	KeyRightControl = int(C.KEY_RIGHT_CONTROL)
+	KeyRightAlt     = int(C.KEY_RIGHT_ALT)
+	KeyRightSuper   = int(C.KEY_RIGHT_SUPER)
 
 	KeyOne   = int(C.KEY_ONE)
 	KeyTwo   = int(C.KEY_TWO)
@@ -56,6 +73,10 @@ func GetTime() float64 { return float64(C.GetTime()) }
 
 // GetMouseWheelMove returns the mouse wheel delta this frame.
 func GetMouseWheelMove() float32 { return float32(C.GetMouseWheelMove()) }
+
+// GetCharPressed dequeues the next typed Unicode codepoint this frame, or 0 if
+// the queue is empty (call repeatedly to drain it). Feeds ImGui text input.
+func GetCharPressed() rune { return rune(C.GetCharPressed()) }
 
 // Mouse buttons (raylib MouseButton).
 const (
