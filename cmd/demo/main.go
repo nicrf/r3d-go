@@ -15,7 +15,7 @@ import (
 	"runtime"
 	"strconv"
 
-	r3d "github.com/nicolasfournier/r3d-go"
+	r3d "github.com/nicrf/r3d-go"
 )
 
 // raylib/GLFW drive Cocoa, which must run on the process main thread.

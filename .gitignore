@@ -1,6 +1,8 @@
 # built binaries
 /r3ddemo
+/r3ddemo.exe
 /r3ddiag
+/r3ddiag.exe
 
 # headless test screenshots at repo root (the committed sample lives in screenshots/)
 /showcase.png
@@ -11,6 +13,7 @@
 /flat.png
 /parallax.png
 /diag*.png
+/win_smoke.png
 
 # macOS / stray
 .DS_Store
