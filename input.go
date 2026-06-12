@@ -7,9 +7,10 @@ import "C"
 
 // Keyboard keys (raylib KeyboardKey) used by demos/apps.
 const (
-	KeySpace = int(C.KEY_SPACE)
-	KeyEnter = int(C.KEY_ENTER)
-	KeyTab   = int(C.KEY_TAB)
+	KeySpace  = int(C.KEY_SPACE)
+	KeyEnter  = int(C.KEY_ENTER)
+	KeyTab    = int(C.KEY_TAB)
+	KeyEscape = int(C.KEY_ESCAPE)
 	KeyLeft  = int(C.KEY_LEFT)
 	KeyRight = int(C.KEY_RIGHT)
 	KeyUp    = int(C.KEY_UP)
@@ -25,6 +26,7 @@ const (
 	KeyK = int(C.KEY_K)
 	KeyO = int(C.KEY_O)
 	KeyP = int(C.KEY_P)
+	KeyQ = int(C.KEY_Q)
 	KeyR = int(C.KEY_R)
 	KeyS = int(C.KEY_S)
 	KeyT = int(C.KEY_T)
